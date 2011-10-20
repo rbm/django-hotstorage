@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from redis import Redis
 
@@ -6,8 +7,24 @@ try:
 except:
     import pickle
 
-# FIXME: NOPE
-redis_client = Redis()
+
+def configure_redis(host=None, port=None, db=None, password=None,
+                    socket_timeout=None, connection_pool=None, charset=None,
+                    errors=None, unix_socket_path=None):
+    if connection_pool:
+        return Redis(connection_pool=connection_pool)
+
+    kwargs = {
+        'host': host or getattr(settings, 'HOTSTORAGE_REDIS_HOST', 'localhost'),
+        'port': port or getattr(settings, 'HOTSTORAGE_REDIS_PORT', 6379),
+        'db': db or getattr(settings, 'HOTSTORAGE_REDIS_DB', 0),
+        'password': password or getattr(settings, 'HOTSTORAGE_REDIS_PASSWORD', None),
+        'charset': charset or getattr(settings, 'HOTSTORAGE_REDIS_CHARSET', 'utf-8'),
+        'errors': errors or 'strict'
+    }
+    return Redis(**kwargs)
+
+redis_client = configure_redis()
 
 
 def _build_redis_querystring(**kwargs):

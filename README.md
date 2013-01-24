@@ -1,3 +1,11 @@
+# Hey you
+
+You almost certainly don't want use this. It's never been run in production and I have no plans to work on it further. It was an idea to compensate for some issues in with a particular use case for Django that ended up being best solved by taking Django out of the equation.
+
+If you're writing a fine-grained caching layer for Django, this may be useful to gather some ideas from. You'd want to handle batch update() and delete() on QuerySets (Hearsay Social avoids those operations for other reasons, so I never bothered trying to implement them here.)
+
+--
+
 django-hotstorage: Secondary storage for Django models in Redis, indexed by primary and natural keys
 
 # Redis Storage Structure
@@ -68,36 +76,3 @@ Before deleting an object from the database, hotstorage will:
 
 * hotstorage is not SQL transaction-safe.
 * Foreign key handling may do unexpected things.
-
-# Futures
-
-## Deferred Mode
-
-hotstorage should eventually implement a deferred mode, wherein writes are
-sent only to Redis, to be synced to the database asynchronously later.
-
-The storage structure might look like this:
-
-### Dirty working set (Redis set, list of primary keys that have yet to be saved to database)
-     modulename.modelname:dirty
-
-### Unsaved new object storage (Redis scalar, pickled object)
-    modulename.modelname:new:uuid
-
-### Created indexes (Redis set, list of UUIDs)
-    appname.modulename.modelname:new:all
-    appname.modulename.modelname:new:uniquefieldname:val
-    appname.modulename.modelname:new:uniquefieldname:val1:uniquefieldname2:val2
-
-This mode may be very unsafe; it will be up to the application to ensure
-sync is possible, and the sync logic itself should be handled by the
-application. In the best case, writes should only come from
-the deferred-enabled processing, ensuring consistency.
-
-## Redis-only/SQL-only fields
-
-hotstorage should eventually support marking certain model fields for
-storage only in the database or in Redis, so that e.g. very volatile fields
-or summary data can be stored purely in Redis and avoid database write
-load, and that rarely-used space-intensive fields may be stored only in the
-database, avoiding Redis memory bloat.
